@@ -29,9 +29,15 @@ input[type="range"] { width: 100%; margin-top: 0.5rem; }
 
 #previewContainer {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, 1fr); /* 5 per row desktop */
   gap: 1rem;
   margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  #previewContainer {
+    grid-template-columns: repeat(2, 1fr); /* 2 per row on mobile */
+  }
 }
 
 .preview-item img {
@@ -92,25 +98,26 @@ const downloadAllBtn = document.getElementById("downloadAll")
 let convertedFiles = []
 qValue.textContent = qualityInput.value
 
-function processImage(file, maxSize=512, quality=0.6) {
-  return new Promise((resolve, reject) => {
+function processImage(file, maxWidth=1920, quality=0.6){
+  return new Promise((resolve,reject)=>{
     const img = new Image()
     const reader = new FileReader()
     reader.onload = () => img.src = reader.result
     reader.onerror = reject
     reader.readAsDataURL(file)
+
     img.onload = () => {
+      const scale = img.width > maxWidth ? maxWidth / img.width : 1
       const canvas = document.createElement("canvas")
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
       const ctx = canvas.getContext("2d")
-      const scale = Math.min(maxSize/img.width, maxSize/img.height, 1)
-      canvas.width = img.width*scale
-      canvas.height = img.height*scale
       ctx.clearRect(0,0,canvas.width,canvas.height)
       ctx.drawImage(img,0,0,canvas.width,canvas.height)
       canvas.toBlob(blob=>{
         if(!blob) return reject("Conversion failed")
         const r = new FileReader()
-        r.onload=()=>resolve(r.result)
+        r.onload = ()=>resolve(r.result)
         r.readAsDataURL(blob)
       },"image/webp",quality)
     }
@@ -126,7 +133,7 @@ async function convertFiles(files){
 
   for(const file of files){
     try{
-      const webp = await processImage(file,2048,quality)
+      const webp = await processImage(file,1920,quality)
       convertedFiles.push({name:file.name.replace(/\.\w+$/,".webp"),dataURL:webp})
 
       const container = document.createElement('div')
@@ -158,31 +165,27 @@ async function convertFiles(files){
 }
 
 // Download all as ZIP
-downloadAllBtn.addEventListener("click", async () => {
-  if (convertedFiles.length === 0) return
-
+downloadAllBtn.addEventListener("click", async ()=>{
+  if(convertedFiles.length===0) return
   downloadAllBtn.disabled = true
   downloadAllBtn.textContent = "Preparing ZIP..."
-
-  try {
+  try{
     const zip = new JSZip()
-    convertedFiles.forEach(f => {
+    convertedFiles.forEach(f=>{
       const base64 = f.dataURL.split(',')[1]
-      zip.file(f.name, base64, {base64:true})
+      zip.file(f.name,base64,{base64:true})
     })
     const blob = await zip.generateAsync({type:"blob"})
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
+    const a = document.createElement('a')
     a.href = url
-    a.download = "images.zip"
+    a.download="images.zip"
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  } catch (err) {
-    alert("ZIP creation failed: " + err)
-    console.error(err)
-  } finally {
+  }catch(err){alert("ZIP creation failed: "+err)}
+  finally{
     downloadAllBtn.disabled = false
     downloadAllBtn.textContent = "Download All as ZIP"
   }
