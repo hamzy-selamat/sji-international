@@ -1,72 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Image → WebP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #f8f8f8;
-      padding: 2rem;
-      max-width: 800px;
-      margin: auto;
-      text-align: center;
-    }
+<meta charset="UTF-8">
+<title>Image → WebP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #f8f8f8;
+  padding: 2rem;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+}
 
-    #dropZone {
-      border: 2px dashed #aaa;
-      border-radius: 8px;
-      padding: 2rem;
-      margin-bottom: 1rem;
-      cursor: pointer;
-      background: #fff;
-    }
+#dropZone {
+  border: 2px dashed #aaa;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  background: #fff;
+}
+#dropZone.hover { border-color: #000; background: #f0f0f0; }
 
-    #dropZone.hover {
-      border-color: #000;
-      background: #f0f0f0;
-    }
+input[type="file"] { display: none; }
+input[type="range"] { width: 100%; margin-top: 0.5rem; }
 
-    input[type="file"] { display: none; }
-    input[type="range"] { width: 100%; margin-top: 0.5rem; }
+#previewContainer {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
 
-    #previewContainer {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 1rem;
-      margin-top: 1rem;
-    }
+.preview-item img {
+  width: 100%;
+  border-radius: 6px;
+  display: block;
+}
 
-    .preview-item img {
-      width: 100%;
-      border-radius: 6px;
-      display: block;
-    }
+.preview-item button {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  padding: 0.3rem;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-    .preview-item a {
-      display: block;
-      margin-top: 0.3rem;
-      font-size: 0.8rem;
-      padding: 0.3rem;
-      background: #000;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 4px;
-    }
-
-    #downloadAll {
-      margin-top: 1rem;
-      padding: 0.6rem 1.2rem;
-      background: #0077ff;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    small { color: #666; }
-  </style>
+#downloadAll {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background: #0077ff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+small { color: #666; }
+</style>
 </head>
 <body>
 
@@ -74,18 +70,17 @@
 <small>Client-side. No upload.</small>
 
 <div id="dropZone">Drag & drop images here or click to select</div>
-<input type="file" accept="image/*" id="fileInput" multiple />
+<input type="file" accept="image/*" id="fileInput" multiple>
 
 <label>
   Quality: <strong><span id="qValue">0.6</span></strong>
-  <input type="range" min="0.1" max="1" step="0.05" value="0.6" id="quality" />
+  <input type="range" min="0.1" max="1" step="0.05" value="0.6" id="quality">
 </label>
 
 <div id="previewContainer"></div>
 <button id="downloadAll" style="display:none">Download All as ZIP</button>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@4.1.0/dist/jszip.min.js"></script>
-
 <script>
 const fileInput = document.getElementById("fileInput")
 const dropZone = document.getElementById("dropZone")
@@ -94,120 +89,109 @@ const qValue = document.getElementById("qValue")
 const previewContainer = document.getElementById("previewContainer")
 const downloadAllBtn = document.getElementById("downloadAll")
 
-let convertedFiles = [] // store {name, dataURL}
-
+let convertedFiles = []
 qValue.textContent = qualityInput.value
 
-function processImage(file, maxSize = 512, quality = 0.6) {
+function processImage(file, maxSize=512, quality=0.6) {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const reader = new FileReader()
     reader.onload = () => img.src = reader.result
     reader.onerror = reject
     reader.readAsDataURL(file)
-
     img.onload = () => {
       const canvas = document.createElement("canvas")
       const ctx = canvas.getContext("2d")
-      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1)
-      canvas.width = img.width * scale
-      canvas.height = img.height * scale
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-
-      canvas.toBlob(blob => {
-        if (!blob) return reject("Conversion failed")
-        const reader2 = new FileReader()
-        reader2.onload = () => resolve(reader2.result)
-        reader2.readAsDataURL(blob)
-      }, "image/webp", quality)
+      const scale = Math.min(maxSize/img.width, maxSize/img.height, 1)
+      canvas.width = img.width*scale
+      canvas.height = img.height*scale
+      ctx.clearRect(0,0,canvas.width,canvas.height)
+      ctx.drawImage(img,0,0,canvas.width,canvas.height)
+      canvas.toBlob(blob=>{
+        if(!blob) return reject("Conversion failed")
+        const r = new FileReader()
+        r.onload=()=>resolve(r.result)
+        r.readAsDataURL(blob)
+      },"image/webp",quality)
     }
   })
 }
 
-async function convertFiles(files) {
-  if (!files || files.length === 0) return
+async function convertFiles(files){
+  if(!files || files.length===0) return
   const quality = parseFloat(qualityInput.value)
   qValue.textContent = quality
   previewContainer.innerHTML = ''
   convertedFiles = []
 
-  for (const file of files) {
-    try {
-      const webp = await processImage(file, 2048, quality)
-      convertedFiles.push({name: file.name.replace(/\.\w+$/, ".webp"), dataURL: webp})
+  for(const file of files){
+    try{
+      const webp = await processImage(file,2048,quality)
+      convertedFiles.push({name:file.name.replace(/\.\w+$/,".webp"),dataURL:webp})
 
       const container = document.createElement('div')
-      container.className = 'preview-item'
+      container.className='preview-item'
 
       const imgEl = document.createElement('img')
       imgEl.src = webp
       imgEl.alt = file.name
 
-      const a = document.createElement('a')
-      a.href = webp
-      a.textContent = `Download`
-      a.addEventListener('click', e => {
-        e.preventDefault()
-        const link = document.createElement('a')
-        link.href = webp
-        link.download = file.name.replace(/\.\w+$/, ".webp")
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+      const btn = document.createElement('button')
+      btn.textContent="Download"
+      btn.addEventListener('click',()=>{
+        const a = document.createElement('a')
+        a.href = webp
+        a.download = file.name.replace(/\.\w+$/,".webp")
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
       })
 
       container.appendChild(imgEl)
-      container.appendChild(a)
+      container.appendChild(btn)
       previewContainer.appendChild(container)
 
-    } catch (err) {
-      console.error('Conversion failed for', file.name, err)
-    }
+    }catch(err){console.error('Conversion failed for',file.name,err)}
   }
 
-  downloadAllBtn.style.display = convertedFiles.length > 1 ? 'inline-block' : 'none'
+  downloadAllBtn.style.display = convertedFiles.length>1?'inline-block':'none'
 }
 
 // Download all as ZIP
-downloadAllBtn.addEventListener("click", async () => {
-  if (convertedFiles.length === 0) return
+downloadAllBtn.addEventListener("click", async ()=>{
+  if(convertedFiles.length===0) return
   const zip = new JSZip()
-  convertedFiles.forEach(file => {
-    const base64 = file.dataURL.split(',')[1]
-    zip.file(file.name, base64, {base64:true})
+  convertedFiles.forEach(f=>{
+    const base64 = f.dataURL.split(',')[1]
+    zip.file(f.name,base64,{base64:true})
   })
-  const content = await zip.generateAsync({type:"blob"})
-  const url = URL.createObjectURL(content)
+  const blob = await zip.generateAsync({type:"blob"})
+  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = "images.zip"
+  a.download="images.zip"
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 })
 
-// File input selection
-fileInput.addEventListener("change", () => convertFiles(fileInput.files))
+// File input
+fileInput.addEventListener("change",()=>convertFiles(fileInput.files))
 
 // Drag & drop
-dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("hover") })
-dropZone.addEventListener("dragleave", e => { e.preventDefault(); dropZone.classList.remove("hover") })
-dropZone.addEventListener("drop", e => {
-  e.preventDefault(); dropZone.classList.remove("hover")
-  convertFiles(e.dataTransfer.files)
-})
+dropZone.addEventListener("dragover", e=>{e.preventDefault(); dropZone.classList.add("hover")})
+dropZone.addEventListener("dragleave", e=>{e.preventDefault(); dropZone.classList.remove("hover")})
+dropZone.addEventListener("drop", e=>{e.preventDefault(); dropZone.classList.remove("hover"); convertFiles(e.dataTransfer.files)})
 
-// Click drop zone to open file picker
-dropZone.addEventListener("click", () => fileInput.click())
+// Click drop zone
+dropZone.addEventListener("click",()=>fileInput.click())
 
 // Update quality
-qualityInput.addEventListener("input", () => {
+qualityInput.addEventListener("input",()=>{
   qValue.textContent = qualityInput.value
-  if (fileInput.files.length > 0) convertFiles(fileInput.files)
+  if(fileInput.files.length>0) convertFiles(fileInput.files)
 })
 </script>
-
 </body>
 </html>
