@@ -158,22 +158,34 @@ async function convertFiles(files){
 }
 
 // Download all as ZIP
-downloadAllBtn.addEventListener("click", async ()=>{
-  if(convertedFiles.length===0) return
-  const zip = new JSZip()
-  convertedFiles.forEach(f=>{
-    const base64 = f.dataURL.split(',')[1]
-    zip.file(f.name,base64,{base64:true})
-  })
-  const blob = await zip.generateAsync({type:"blob"})
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download="images.zip"
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+downloadAllBtn.addEventListener("click", async () => {
+  if (convertedFiles.length === 0) return
+
+  downloadAllBtn.disabled = true
+  downloadAllBtn.textContent = "Preparing ZIP..."
+
+  try {
+    const zip = new JSZip()
+    convertedFiles.forEach(f => {
+      const base64 = f.dataURL.split(',')[1]
+      zip.file(f.name, base64, {base64:true})
+    })
+    const blob = await zip.generateAsync({type:"blob"})
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "images.zip"
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    alert("ZIP creation failed: " + err)
+    console.error(err)
+  } finally {
+    downloadAllBtn.disabled = false
+    downloadAllBtn.textContent = "Download All as ZIP"
+  }
 })
 
 // File input
